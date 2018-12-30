@@ -9,7 +9,13 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
+import android.widget.CheckedTextView
+import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
+import eu.close2infinity.shoppingrat.model.ItemType
+import eu.close2infinity.shoppingrat.model.ShoppingListItem
+import eu.close2infinity.shoppingrat.model.UnitType
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 
@@ -19,7 +25,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var viewAdapter: RecyclerView.Adapter<*>
     private lateinit var viewManager: RecyclerView.LayoutManager
 
-    private val myDataset: List<String> = listOf("Gurken", "Hackfleisch")
+    private val myDataset: List<ShoppingListItem> = listOf(
+            ShoppingListItem(ItemType("Gurken", UnitType("")), 2, null, "http://www.gemuese.ch/Ressourcen/Bilder/Gemusearten/Gemusebilder-Header/Headerbilder_Saisonkalender_Gurke-de.jpg"),
+            ShoppingListItem(ItemType("Hackfleisch", UnitType("g")), 500, "Gemischt", "https://bilder.t-online.de/b/81/83/97/58/id_81839758/610/tid_da/um-salmonellen-im-fleisch-abzutoeten-muessen-sie-dieses-gut-durchbraten-gerade-hackfleisch-ist-besonders-anfaellig-fuer-erreger.jpg"));
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +47,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         nav_view.setNavigationItemSelectedListener(this)
 
         viewManager = LinearLayoutManager(this)
-        viewAdapter = MyAdapter(myDataset.toTypedArray())
+        viewAdapter = MyAdapter(myDataset)
 
         recyclerView = findViewById<RecyclerView>(R.id.my_recycler_view).apply {
             // use this setting to improve performance if you know that changes
@@ -106,15 +114,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 }
 
-class MyAdapter(private val myDataset: Array<String>) :
-        RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
+class MyAdapter(private val myDataset: List<ShoppingListItem>) : RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder.
     // Each data item is just a string in this case that is shown in a TextView.
     class MyViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
-        var title: TextView = view.findViewById(R.id.title) as TextView
+        var title: CheckedTextView = view.findViewById(R.id.title) as CheckedTextView
+        var description: TextView = view.findViewById(R.id.description) as TextView
+        var image: ImageView = view.findViewById(R.id.image) as ImageView
     }
 
 
@@ -130,7 +139,12 @@ class MyAdapter(private val myDataset: Array<String>) :
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        holder.title.text = myDataset[position]
+        val item = myDataset[position]
+        holder.title.text = "${item.amount}${item.type.unit.shortName} ${item.type.title}"
+        holder.description.text = item.description ?: ""
+        Glide.with(holder.view.context)
+                .load(item.imageUrl)
+                .into(holder.image);
     }
 
     // Return the size of your dataset (invoked by the layout manager)
